@@ -1,0 +1,47 @@
+name: Build ConnectReel APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "ConnectReel-Android-Project.zip"
+      - ".github/workflows/build-apk.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Extract ConnectReel project
+        run: |
+          unzip -q ConnectReel-Android-Project.zip
+          cd connectreel-android
+          echo "Project extracted"
+
+      - name: Install dependencies
+        working-directory: connectreel-android
+        run: npm install
+
+      - name: Build Android APK
+        working-directory: connectreel-android
+        run: npm run android:build
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ConnectReel-APK
+          path: connectreel-android/android/app/build/outputs/apk/debug/app-debug.apk
