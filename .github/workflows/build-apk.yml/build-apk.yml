@@ -37,11 +37,29 @@ jobs:
         run: npm install
 
       - name: Build Android APK
+              - name: Build Android APK
         working-directory: connectreel-android
-        run: npm run android:build
+        run: |
+          echo "Checking Android project..."
+          find . -maxdepth 4 -type f \( -name "gradlew" -o -name "settings.gradle" -o -name "settings.gradle.kts" \) -print
+
+          GRADLEW=$(find . -type f -name gradlew | head -1)
+
+          if [ -z "$GRADLEW" ]; then
+            echo "ERROR: gradlew not found!"
+            echo "Android project structure:"
+            find . -maxdepth 3 -type f | head -100
+            exit 1
+          fi
+
+          echo "Using Gradle wrapper: $GRADLEW"
+          chmod +x "$GRADLEW"
+          DIR=$(dirname "$GRADLEW")
+          cd "$DIR"
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ConnectReel-APK
-          path: connectreel-android/android/app/build/outputs/apk/debug/app-debug.apk
+          path: connectreel-android/**/build/outputs/apk/debug/*.apk
